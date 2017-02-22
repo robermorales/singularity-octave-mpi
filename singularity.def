@@ -1,0 +1,41 @@
+BootStrap: debootstrap
+OSVersion: trusty
+MirrorURL: http://pt.archive.ubuntu.com/ubuntu/
+
+%runscript
+
+exec /usr/bin/octave "$@"
+
+%test
+
+octave-cli --eval 'ver'
+mpirun --version
+mpirun --allow-run-as-root octave-cli -q --eval 'pkg load mpi; helloworld();'
+
+%post
+
+echo 'deb http://us.archive.ubuntu.com/ubuntu trusty main universe' > /etc/apt/sources.list
+echo 'deb http://ppa.launchpad.net/octave/stable/ubuntu trusty main' > /etc/apt/sources.list.d/octave.list
+
+OCTAVE_KEY=DCB1CB6E
+(apt-key list|grep $OCTAVE_KEY) || (apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $OCTAVE_KEY)
+
+apt update
+apt install -y octave liboctave-dev git mercurial autoconf build-essential libtool flex unzip ssh
+
+ompi=`mktemp -d`
+git clone https://github.com/open-mpi/ompi.git $ompi
+cd $ompi
+./autogen.pl
+./configure --prefix=/usr/local
+make -j5
+make check
+make install
+
+echo /usr/local/lib/openmpi > /etc/ld.so.conf.d/openmpi.conf
+
+octavempi=`mktemp -d`
+hg clone http://hg.code.sf.net/p/octave/mpi $octavempi
+cd $octavempi
+hg archive ../mpi.zip
+octave-cli --eval 'pkg install ../mpi.zip'
