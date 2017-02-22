@@ -1,0 +1,46 @@
+Bootstrap: arch
+
+%post
+
+OPENMPI_GIT=https://github.com/open-mpi/ompi.git
+
+OCTAVE_MPI_URL=https://sourceforge.net/code-snapshots/hg/o/oc/octave/mpi/octave-mpi-f601a5e3031544132064c06835452e6de680939c.zip
+OCTAVE_MPI_ZIP=mpi-1.2.0-2.zip
+
+pacman -Sy --needed --noconfirm \
+  autoconf \
+  automake \
+  flex \
+  gcc \
+  git \
+  make \
+  octave \
+  unzip \
+  wget
+
+# https://sourceforge.net/p/octave/mpi/ci/default/tree/
+
+( mpirun --version ) ||\
+  ( git clone $OPENMPI_GIT ompi &&\
+    cd ompi &&\
+    ./autogen.pl &&\
+    ./configure --prefix=/usr/local &&\
+    make &&\
+    make install )
+
+( octave-cli --eval 'pkg list mpi' | grep '1.2.0' ) ||\
+( wget -O $OCTAVE_MPI_ZIP $OCTAVE_MPI_URL && octave-cli --eval 'pkg install $OCTAVE_MPI_ZIP' )
+
+exit 0
+
+%runscript
+
+exec /usr/bin/octave "$@"
+
+
+%test
+
+octave-cli --eval 'ver'
+mpirun --version
+mpirun --allow-run-as-root -np 3 octave-cli --eval 'pkg load mpi; helloworld();'
+

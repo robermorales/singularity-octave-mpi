@@ -1,0 +1,40 @@
+Bootstrap: arch
+
+%post
+
+# pacman -Syyu
+pacman -Sy --noconfirm --needed wget git mercurial unzip base-devel octave
+
+echo 'Server = http://ftp.dei.uc.pt/pub/linux/manjaro/stable/$repo/$arch' > /etc/pacman.d/mirrorlist
+
+git clone https://github.com/gmkurtzer/singularity.git /tmp/singularity
+cd /tmp/singularity
+./autogen.sh
+./configure --prefix=/usr/local --sysconfdir=/etc
+make
+sudo make install
+
+hg clone http://hg.code.sf.net/p/octave/mpi /tmp/mpi
+cd /tmp/mpi
+hg archive ../mpi.zip
+octave-cli --eval 'pkg install ../mpi.zip'
+
+git clone https://github.com/open-mpi/ompi.git /tmp/ompi
+cd /tmp/ompi
+./autogen.pl
+./configure --prefix=/usr/local
+make
+make install
+
+exit 0
+
+%runscript
+
+exec /usr/bin/octave "$@"
+
+%test
+
+octave-cli --eval 'ver'
+mpirun --version
+mpirun --allow-run-as-root -np 3 octave-cli --eval 'pkg load mpi; helloworld();'
+
