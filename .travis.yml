@@ -3,8 +3,8 @@ python:
   - "3.6"
 sudo: required
 install:
-  - sh install-singularity.sh
+  - sh install-singularity.sh > singularity-install.log 2>&1
 script:
-  - sh bootstrap-singularity.sh
+  - sh bootstrap-singularity.sh > singularity-bootstrap.log 2>&1
 addons:
   artifacts: true
