@@ -4,37 +4,83 @@ MirrorURL: http://pt.archive.ubuntu.com/ubuntu/
 
 %runscript
 
-exec /usr/bin/octave "$@"
+export LD_CUSTOM_PATH=/usr/local/lib:/usr/local/lib/openmpi
+export LD_LIBRARY_PATH=$LD_CUSTOM_PATH:$LD_LIBRARY_PATH
+export LD_RUN_PATH=$LD_CUSTOM_PATH:$LD_RUN_PATH
+
+exec mpirun octave-cli "$@"
 
 %test
 
-octave-cli --eval 'ver'
+export LD_CUSTOM_PATH=/usr/local/lib:/usr/local/lib/openmpi
+export LD_LIBRARY_PATH=$LD_CUSTOM_PATH:$LD_LIBRARY_PATH
+export LD_RUN_PATH=$LD_CUSTOM_PATH:$LD_RUN_PATH
+
 mpirun --version
-mpirun --allow-run-as-root octave-cli -q --eval 'pkg load mpi; helloworld();'
+mpirun --allow-run-as-root echo hello
+
+cat > pingpong.cpp <<- EOF
+
+#include <mpi.h>
+#include <iostream>
+
+int main(int argc, char *argv[])
+{
+               MPI_Init( &argc, &argv );
+  int tasks;   MPI_Comm_size( MPI_COMM_WORLD, &tasks );
+  int task_id; MPI_Comm_rank( MPI_COMM_WORLD, &task_id );
+  int recv;
+
+  if( task_id == 0 ) {
+    for( int i = 1; i < tasks; i ++ ) {
+      MPI_Send( &i, 1, MPI_INT, i, 0, MPI_COMM_WORLD );
+      MPI_Recv( &recv, 1, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+      std::cout << "ping " << i << " pong " << recv << " !\n\n";
+    }
+  } else {
+    MPI_Recv( &recv, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+    MPI_Send( &recv, 1, MPI_INT, 0, 0, MPI_COMM_WORLD );
+  }
+
+  MPI_Finalize();
+}
+EOF
+
+mpic++ pingpong.cpp -o pingpong++
+mpirun --allow-run-as-root ./pingpong++
+
+octave-cli --eval 'ver'
+mpirun --allow-run-as-root octave-cli -q --eval 'pkg load mpi; Pi();'
 
 %post
 
 echo 'deb http://us.archive.ubuntu.com/ubuntu trusty main universe' > /etc/apt/sources.list
 echo 'deb http://ppa.launchpad.net/octave/stable/ubuntu trusty main' > /etc/apt/sources.list.d/octave.list
-
 OCTAVE_KEY=DCB1CB6E
 (apt-key list|grep $OCTAVE_KEY) || (apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $OCTAVE_KEY)
 
+locale-gen en_US en_US.UTF-8
+dpkg-reconfigure locales
 apt update
 apt install -y octave liboctave-dev git mercurial autoconf build-essential libtool flex unzip ssh
 
-ompi=`mktemp -d`
+
+ompi=ompi
+cd
 git clone https://github.com/open-mpi/ompi.git $ompi
 cd $ompi
 ./autogen.pl
-./configure --prefix=/usr/local
+./configure --prefix=/usr/local --enable-shared --enable-static
 make -j5
-make check
 make install
 
-echo /usr/local/lib/openmpi > /etc/ld.so.conf.d/openmpi.conf
 
-octavempi=`mktemp -d`
+export LD_CUSTOM_PATH=/usr/local/lib:/usr/local/lib/openmpi
+export LD_LIBRARY_PATH=$LD_CUSTOM_PATH:$LD_LIBRARY_PATH
+export LD_RUN_PATH=$LD_CUSTOM_PATH:$LD_RUN_PATH
+
+octavempi=octavempi
+cd
 hg clone http://hg.code.sf.net/p/octave/mpi $octavempi
 cd $octavempi
 hg archive ../mpi.zip

@@ -5,6 +5,6 @@ sudo: required
 install:
   - sh install-singularity.sh > singularity-install.log 2>&1
 script:
-  - travis_wait 40 sh bootstrap-singularity.sh 
+  - sh bootstrap-singularity.sh
 addons:
   artifacts: true
