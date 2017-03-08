@@ -69,10 +69,10 @@ ompi=ompi
 cd
 git clone https://github.com/open-mpi/ompi.git $ompi
 cd $ompi
-./autogen.pl                                                     > ompi-install.log 2> &1
-./configure --prefix=/usr/local --enable-shared --enable-static >> ompi-install.log 2>>&1
-make -j5                                                        >> ompi-install.log 2>>&1
-make install                                                    >> ompi-install.log 2>>&1
+./autogen.pl                                                     > ompi-install.log
+./configure --prefix=/usr/local --enable-shared --enable-static >> ompi-install.log
+make -j5                                                        >> ompi-install.log
+make install                                                    >> ompi-install.log
 
 
 export LD_CUSTOM_PATH=/usr/local/lib:/usr/local/lib/openmpi

@@ -16,4 +16,5 @@ cd ..
 rm -rf singularity-$VERSION
 rm singularity-$VERSION.tar.gz
 
-sudo apt-get install -y -q debootstrap
+sudo apt-get update
+sudo apt-get install -y -q debootstrap liblz4-tool

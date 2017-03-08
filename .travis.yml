@@ -1,9 +1,8 @@
-language: python
-python:
-  - "3.6"
+dist: trusty
 sudo: required
+language: generic
 install:
-  - sh install-singularity.sh > singularity-install.log 2>&1
+  - sh install-singularity.sh # > singularity-install.log 2>&1
 script:
   - sh bootstrap-singularity.sh
 addons:
