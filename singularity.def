@@ -1,6 +1,6 @@
 BootStrap: debootstrap
 OSVersion: trusty
-MirrorURL: http://pt.archive.ubuntu.com/ubuntu/
+MirrorURL: http://us.archive.ubuntu.com/ubuntu/
 
 %runscript
 
@@ -62,17 +62,17 @@ OCTAVE_KEY=DCB1CB6E
 locale-gen en_US en_US.UTF-8
 dpkg-reconfigure locales
 apt update
-apt install -y octave liboctave-dev git mercurial autoconf build-essential libtool flex unzip ssh
+apt install -y octave liboctave-dev git mercurial autoconf build-essential libtool flex unzip ssh > apt-install.log 2>&1
 
 
 ompi=ompi
 cd
 git clone https://github.com/open-mpi/ompi.git $ompi
 cd $ompi
-./autogen.pl
-./configure --prefix=/usr/local --enable-shared --enable-static
-make -j5
-make install
+./autogen.pl                                                     > ompi-install.log 2> &1
+./configure --prefix=/usr/local --enable-shared --enable-static >> ompi-install.log 2>>&1
+make -j5                                                        >> ompi-install.log 2>>&1
+make install                                                    >> ompi-install.log 2>>&1
 
 
 export LD_CUSTOM_PATH=/usr/local/lib:/usr/local/lib/openmpi
