@@ -8,7 +8,7 @@ export LD_CUSTOM_PATH=/usr/local/lib:/usr/local/lib/openmpi
 export LD_LIBRARY_PATH=$LD_CUSTOM_PATH:$LD_LIBRARY_PATH
 export LD_RUN_PATH=$LD_CUSTOM_PATH:$LD_RUN_PATH
 
-exec mpirun octave-cli "$@"
+eval "$@"
 
 %test
 

@@ -1,8 +1,8 @@
 #!/bin/sh
 
-#  git symbolic-ref --short HEAD || git describe --all
+# GIT_VERSION=`git symbolic-ref --short HEAD || git describe --all || date +%Y%m%d-%H%M%S -u`
 
-image=`basename $PWD`-`date +%Y%m%d-%H%M%S -u`.img
+image=`basename $PWD`.img
 
 sudo singularity create -s 4000 $image
 sudo singularity bootstrap $image singularity.def
